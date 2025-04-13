@@ -1,117 +1,38 @@
-import java.text.NumberFormat;
 import java.util.Scanner;
 
 import static java.lang.System.exit;
 
 public class MacroCalculator {
-    static Scanner userInput = new Scanner(System.in);
+    static final int MIN_PERCENTAGE_VALUE = 0;
+    static final int MAX_PERCENTAGE_VALUE = 100;
+    static final byte CARBS_AUTO_PERCENTAGE = 50;
+    static final byte PROTEIN_AUTO_PERCENTAGE = 20;
+    static final byte FAT_AUTO_PERCENTAGE = 30;
+
+    static float gramsOfCarb;
+    static float gramsOfProtein;
+    static float gramsOfFat;
     static int targetCalories = 0;
+    static Scanner userInput = new Scanner(System.in);
 
-    public static void AutoCalculation() {
-        System.out.println("[DEBUG] Auto calculation...");
-
-        float caloriesFromCarbs;
-        float caloriesFromProtein;
-        float caloriesFromFat;
-
-        caloriesFromCarbs = targetCalories * 0.5f;
-        System.out.println("[DEBUG] Calories from carbs: " + caloriesFromCarbs);
-        float gramsOfCarb = caloriesFromCarbs / 4;
-
-        caloriesFromProtein = targetCalories * 0.2f;
-        System.out.println("[DEBUG] Calories from protein: " + caloriesFromProtein);
-        float gramsOfProtein = caloriesFromProtein / 4;
-
-        caloriesFromFat = targetCalories * 0.3f;
-        System.out.println("[DEBUG] Calories from fat: " + caloriesFromFat);
-        float gramsOfFat = caloriesFromFat / 9;
-
-        System.out.println("So, for a total of " + targetCalories + " calories with a 50% carb, 20% protein, and 30% fat breakdown, you would need:");
-
-        System.out.println(String.format("%.2f", gramsOfCarb) + " grams of carbs"
-                + "\n" + String.format("%.2f", gramsOfProtein) + " grams of protein"
-                + "\n" + String.format("%.2f", gramsOfFat) + " grams of fat");
+    static double readNumber(String prompt) {
+        Scanner scanner = new Scanner(System.in);
+        double value;
+        while(true) {
+            System.out.print(prompt + ": ");
+            value = scanner.nextFloat();
+            if (value >= MIN_PERCENTAGE_VALUE && value <= MAX_PERCENTAGE_VALUE)
+                break;
+        }
+        return value;
     }
 
-    public static void ManualCalculation() {
-        byte carbohydratePercentage = 0;
-        byte proteinPercentage = 0;
-        byte fatPercentage = 0;
-
-        NumberFormat numberFormat = null;
-
-        System.out.println("[DEBUG] Manual calculation...");
-        while(true) {
-            System.out.print("Carbohydrate percentage: ");
-            carbohydratePercentage = userInput.nextByte();
-            if (carbohydratePercentage >= 0 && carbohydratePercentage <= 100)
-                break;
-        }
-
-        while(true) {
-            System.out.print("Protein percentage: ");
-            proteinPercentage = userInput.nextByte();
-            if (proteinPercentage >= 0 && proteinPercentage <= 100)
-                break;
-        }
-
-        while(true) {
-            System.out.print("Fat percentage: ");
-            fatPercentage = userInput.nextByte();
-            if (fatPercentage >= 0 && fatPercentage <= 100)
-                break;
-        }
-
-        if (carbohydratePercentage + proteinPercentage + fatPercentage != 100) {
-            System.out.println("The sum of the provided percentages is not equal to 100%. Please ensure the percentages add up to 100%.");
-            exit(1);
-        }
-
-        System.out.println("[DEBUG] Carbs: " + carbohydratePercentage
-                + "\nProtein: " + proteinPercentage
-                + "\nFat: " + fatPercentage);
-
-        float caloriesFromCarbs;
-        float caloriesFromProtein;
-        float caloriesFromFat;
-
-        caloriesFromCarbs = targetCalories * ((float) carbohydratePercentage / 100);
-        System.out.println("[DEBUG] Calories from carbs: " + caloriesFromCarbs);
-        float gramsOfCarb = caloriesFromCarbs / 4;
-
-        caloriesFromProtein = targetCalories * ((float)proteinPercentage / 100);
-        System.out.println("[DEBUG] Calories from protein: " + caloriesFromProtein);
-        float gramsOfProtein = caloriesFromProtein / 4;
-
-        caloriesFromFat = targetCalories * ((float)fatPercentage / 100);
-        System.out.println("[DEBUG] Calories from fat: " + caloriesFromFat);
-        float gramsOfFat = caloriesFromFat / 9;
-
-        System.out.println("So, for a total of " + targetCalories + " calories with a " +
-                carbohydratePercentage + "% carb, " + proteinPercentage + "% protein, and " + fatPercentage + "% fat breakdown, you would need:");
-
-        System.out.println(String.format("%.2f", gramsOfCarb) + " grams of carbs"
-                + "\n" + String.format("%.2f", gramsOfProtein) + " grams of protein"
-                + "\n" + String.format("%.2f", gramsOfFat) + " grams of fat");
-
-        carbohydratePercentage = (byte) ((caloriesFromCarbs / targetCalories) * 100);
-        proteinPercentage = (byte) ((caloriesFromProtein / targetCalories) * 100);
-        fatPercentage = (byte) ((caloriesFromFat / targetCalories) * 100);
-
-        System.out.println("[DEBUG] So, for a total of " + targetCalories + " calories with a " +
-                carbohydratePercentage + "% carb, " + proteinPercentage + "% protein, and " + fatPercentage + "% fat breakdown, you would need:");
+    static float getMacroCalories(byte macroPercentage, int caloriesPerGram) {
+        float macroCalories = (targetCalories * (float) macroPercentage) / MAX_PERCENTAGE_VALUE;
+        return macroCalories / caloriesPerGram;
     }
 
-    public static void main(String[] args) {
-        /*
-        Each gram of macronutrient produces a specific number of calories:
-            1 gram of carbohydrate = 4 calories.
-            1 gram of protein = 4 calories.
-            1 gram of fat = 9 calories.
-        */
-
-        byte calculationMethodOption = 1;
-
+    static void setTargetCalories() {
         while(true) {
             System.out.print("Enter your target calories: ");
             targetCalories = userInput.nextInt();
@@ -119,20 +40,60 @@ public class MacroCalculator {
                 break;
             System.out.println("Wrong input! Please try again.");
         }
+    }
 
+    static void setCalculationMethod() {
         while(true) {
-            System.out.println("Choose calculation method: "
-                    + "\n1) Auto"
-                    + "\n2) Manual");
-            calculationMethodOption = userInput.nextByte();
-            if (calculationMethodOption == 1 || calculationMethodOption == 2)
+            System.out.println("Please choose a calculation method:\n1) Automatic\n2) Manual");
+            byte calculationMethodOption = userInput.nextByte();
+            if (calculationMethodOption == 1) {
+                autoCalculation();
                 break;
+            } else if (calculationMethodOption == 2) {
+                manualCalculation();
+                break;
+            }
             System.out.println("Wrong input! Select any of the available options.");
         }
+    }
 
-        if (calculationMethodOption == 1)
-            AutoCalculation();
-        else
-            ManualCalculation();
+    static void printResults(byte carbsPercent, byte proteinPercent, byte fatPercent) {
+        System.out.println("For a total of " + targetCalories + " calories with a " + carbsPercent +"% carbs, "
+                + proteinPercent +"% protein, and " + fatPercent + "% fat breakdown, you'll need:");
+
+        System.out.println(String.format("%.2f", gramsOfCarb) + " grams of carbs"
+                + "\n" + String.format("%.2f", gramsOfProtein) + " grams of protein"
+                + "\n" + String.format("%.2f", gramsOfFat) + " grams of fat");
+    }
+
+    static void autoCalculation() {
+        System.out.println("[DEBUG] Auto calculation...");
+        gramsOfCarb = getMacroCalories(CARBS_AUTO_PERCENTAGE, 4);
+        gramsOfProtein = getMacroCalories(PROTEIN_AUTO_PERCENTAGE, 4);
+        gramsOfFat = getMacroCalories(FAT_AUTO_PERCENTAGE, 9);
+
+        printResults(CARBS_AUTO_PERCENTAGE, PROTEIN_AUTO_PERCENTAGE, FAT_AUTO_PERCENTAGE);
+    }
+
+    static void manualCalculation() {
+        byte carbohydratePercentage = (byte) readNumber("Carbohydrate percentage");
+        byte proteinPercentage = (byte) readNumber("Protein percentage");
+        byte fatPercentage = (byte) readNumber("Fat percentage");
+
+        if (carbohydratePercentage + proteinPercentage + fatPercentage != MAX_PERCENTAGE_VALUE) {
+            System.out.println("Percentages must total " + MAX_PERCENTAGE_VALUE + "%.");
+            exit(1);
+        }
+
+        gramsOfCarb = getMacroCalories(carbohydratePercentage, 4);
+        gramsOfProtein = getMacroCalories(proteinPercentage, 4);
+        gramsOfFat = getMacroCalories(fatPercentage, 9);
+
+        printResults(carbohydratePercentage, proteinPercentage, fatPercentage);
+    }
+
+    public static void main(String[] args) {
+        setTargetCalories();
+        setCalculationMethod();
     }
 }
